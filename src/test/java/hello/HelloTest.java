@@ -4,6 +4,7 @@ import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.config.BeanDefinition;
+import org.springframework.beans.factory.config.RuntimeBeanReference;
 import org.springframework.beans.factory.support.RootBeanDefinition;
 import org.springframework.context.support.StaticApplicationContext;
 
@@ -40,6 +41,23 @@ public class HelloTest {
 
         assertThat(hello1).isNotSameAs(hello2);
         assertThat(context.getBeanFactory().getBeanDefinitionCount()).isEqualTo(2);
+    }
+
+    @Test
+    void test3() {
+        StaticApplicationContext context = new StaticApplicationContext();
+        context.registerBeanDefinition("printer", new RootBeanDefinition(StringPrinter.class));
+
+        BeanDefinition helloDef = new RootBeanDefinition(Hello.class);
+        helloDef.getPropertyValues().addPropertyValue("name", "Spring");
+        // 아이디가 printer 인 빈을 찾아서 printer 프로퍼티에 DI
+        helloDef.getPropertyValues().addPropertyValue("printer", new RuntimeBeanReference("printer"));
+        context.registerBeanDefinition("hello", helloDef);
+
+        Hello hello = context.getBean("hello", Hello.class);
+        hello.print();
+
+        assertThat(context.getBean("printer").toString()).isEqualTo("Hello Spring");
     }
 
 }
